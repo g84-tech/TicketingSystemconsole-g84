@@ -324,6 +324,5 @@ Git Dokumentation
 https://git-scm.com/docs
 
 ChatGPT (OpenAI) – Unterstützung bei Debugging, Strukturierung und Dokumentation des Projekts
-Microsoft Learn: Build skills that open doors in your career
-Gain technical skills through documentation and training, earn certifications and connect with the community
+
  
