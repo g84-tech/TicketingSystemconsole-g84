@@ -1,151 +1,143 @@
 ﻿using System;
 using System.Collections.Generic;
+
 namespace TicketingSystemConsole
 {
     // Hauptklasse Program mit Main() Methode
-    class Program
+    // Diese Klasse startet das Programm und steuert das Menü
+    internal class Program
     {
         static void Main(string[] args)
         {
-            // Datenbank initialisieren
-            Database db = new Database();
+            Database database = new Database();
+            TicketService ticketService = new TicketService(database);
+
+            Console.Write("Benutzername eingeben: ");
+            string username = Console.ReadLine() ?? "";
+
+            User currentUser = new User(username);
+
             bool running = true;
+
             while (running)
             {
                 Console.Clear();
-                Console.WriteLine("=== Ticketing System ===");
-                Console.WriteLine("1. Tickets anzeigen");
-                Console.WriteLine("2. Ticket hinzufügen");
-                Console.WriteLine("3. Ticket bearbeiten");
-                Console.WriteLine("4. Ticket löschen");
-                Console.WriteLine("0. Beenden");
-                Console.Write("Option wählen: ");
+
+                Console.WriteLine("===== Ticket System =====");
+                Console.WriteLine("1 - Ticket erstellen");
+                Console.WriteLine("2 - Tickets anzeigen");
+
+                if (currentUser.IsAdmin())
+                {
+                    Console.WriteLine("3 - Ticket löschen");
+                }
+
+                Console.WriteLine("0 - Beenden");
+
+                Console.Write("Auswahl: ");
                 string choice = Console.ReadLine() ?? "";
+
                 switch (choice)
                 {
                     case "1":
-                        ListTickets(db);
+                        CreateTicket(ticketService);
                         break;
+
                     case "2":
-                        AddTicket(db);
+                        ListTickets(ticketService);
                         break;
+
                     case "3":
-                        UpdateTicket(db);
+                        if (currentUser.IsAdmin())
+                        {
+                            DeleteTicket(ticketService);
+                        }
                         break;
-                    case "4":
-                        DeleteTicket(db);
-                        break;
+
                     case "0":
                         running = false;
                         break;
+
                     default:
-                        Console.WriteLine("Ungültige Auswahl. Enter drücken...");
+                        Console.WriteLine("Ungültige Auswahl.");
                         Console.ReadLine();
                         break;
                 }
             }
         }
-        // Methode: Alle Tickets anzeigen
-        static void ListTickets(Database db)
+
+        // Neues Ticket erstellen
+        static void CreateTicket(TicketService ticketService)
         {
-            var tickets = db.GetTickets();
-            Console.WriteLine("--- Tickets ---");
-            foreach (var t in tickets)
-                Console.WriteLine($"{t.Id}: {t.Title} [{t.Status}] - {t.Description}");
+            Console.Clear();
+
+            Console.Write("Titel des Tickets: ");
+            string title = Console.ReadLine() ?? "";
+
+            Console.Write("Beschreibung: ");
+            string description = Console.ReadLine() ?? "";
+
+            ticketService.CreateTicket(title, description);
+
+            Console.WriteLine("Ticket erfolgreich erstellt.");
             Console.WriteLine("Enter drücken...");
             Console.ReadLine();
         }
-        // Methode: Neues Ticket hinzufügen
-        static void AddTicket(Database db)
+
+        // Alle Tickets anzeigen
+        static void ListTickets(TicketService ticketService)
         {
-            Console.Write("Titel: ");
-            string title = Console.ReadLine() ?? "";
-            Console.Write("Beschreibung: ");
-            string desc = Console.ReadLine() ?? "";
-            db.AddTicket(new Ticket { Title = title, Description = desc });
-            Console.WriteLine("Ticket hinzugefügt. Enter drücken...");
-            Console.ReadLine();
-        }
-        // Methode: Ticket bearbeiten
-        static void UpdateTicket(Database db)
-        {
-            Console.Write("Ticket-ID zum Bearbeiten: ");
-            if (int.TryParse(Console.ReadLine(), out int id))
+            Console.Clear();
+
+            List<Ticket> tickets = ticketService.GetTickets();
+
+            if (tickets.Count == 0)
             {
-                var ticket = db.GetTickets().Find(t => t.Id == id);
-                if (ticket != null)
-                {
-                    Console.Write("Neuer Titel: ");
-                    string newTitle = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(newTitle)) ticket.Title = newTitle;
-                    Console.Write("Neue Beschreibung: ");
-                    string newDesc = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(newDesc)) ticket.Description = newDesc;
-                    Console.Write("Neuer Status (Open/InProgress/Closed): ");
-                    string newStatus = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(newStatus)) ticket.Status = newStatus;
-                    db.UpdateTicket(ticket);
-                    Console.WriteLine("Ticket aktualisiert. Enter drücken...");
-                }
-                else
-                {
-                    Console.WriteLine("Ticket nicht gefunden. Enter drücken...");
-                }
+                Console.WriteLine("Keine Tickets vorhanden.");
             }
             else
             {
-                Console.WriteLine("Ungültige ID. Enter drücken...");
+                foreach (Ticket t in tickets)
+                {
+                    Console.WriteLine($"ID: {t.Id}");
+                    Console.WriteLine($"Titel: {t.Title}");
+                    Console.WriteLine($"Status: {t.Status}");
+                    Console.WriteLine($"Beschreibung: {t.Description}");
+                    Console.WriteLine("-----------------------------");
+                }
             }
+
+            Console.WriteLine("Enter drücken...");
             Console.ReadLine();
         }
-        // Methode: Ticket löschen
-        static void DeleteTicket(Database db)
+
+        // Ticket löschen mit Fehlerbehandlung
+        static void DeleteTicket(TicketService ticketService)
         {
-            Console.Write("Ticket-ID zum Löschen: ");
-            if (int.TryParse(Console.ReadLine(), out int id))
+            Console.Clear();
+
+            try
             {
-                db.DeleteTicket(id);
-                Console.WriteLine("Ticket gelöscht (falls vorhanden). Enter drücken...");
+                Console.Write("Ticket ID eingeben: ");
+
+                int id = int.Parse(Console.ReadLine() ?? "0");
+
+                ticketService.DeleteTicket(id);
+
+                Console.WriteLine("Ticket wurde gelöscht.");
             }
-            else
+            catch
             {
-                Console.WriteLine("Ungültige ID. Enter drücken...");
+                Console.WriteLine("Ungültige Eingabe. Bitte eine Zahl eingeben.");
             }
+
+            Console.WriteLine("Enter drücken...");
             Console.ReadLine();
-        }
-    }
-    // Klasse Ticket
-    class Ticket
-    {
-        private static int _nextId = 1; // Automatische ID-Vergabe
-        public int Id { get; private set; }
-        public string Title { get; set; } = "";
-        public string Description { get; set; } = "";
-        public string Status { get; set; } = "Open";
-        public Ticket()
-        {
-            Id = _nextId++;
-        }
-    }
-    // "Datenbank" - speichert Tickets in einer Liste
-    class Database
-    {
-        private List<Ticket> tickets = new List<Ticket>();
-        public List<Ticket> GetTickets()
-        {
-            return tickets;
-        }
-        public void AddTicket(Ticket t)
-        {
-            tickets.Add(t);
-        }
-        public void UpdateTicket(Ticket t)
-        {
-            // Referenzobjekt wird aktualisiert, daher kein weiterer Code nötig
-        }
-        public void DeleteTicket(int id)
-        {
-            tickets.RemoveAll(t => t.Id == id);
         }
     }
 }
+
+
+
+
+
