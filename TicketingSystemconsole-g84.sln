@@ -22,6 +22,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{02EA681E-C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "screenshots", "screenshots", "{91F14F94-E63D-41A6-A054-9349D61D4210}"
 	ProjectSection(SolutionItems) = preProject
+		create-ticket2.png = create-ticket2.png
+		list-tickets2.png = list-tickets2.png
+		Menu.png = Menu.png
+		Menu2.png = Menu2.png
+		Menu3.png = Menu3.png
 		tag1_console_menu.png = tag1_console_menu.png
 		ticket_added.png = ticket_added.png
 		ticket_list.png = ticket_list.png
